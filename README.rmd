@@ -1,15 +1,16 @@
 ---
 title: "R Notebook"
-output: html_document
+output: md_document
 ---
-extract data of UK companies from wikipedia
 
-
+#Extract data of UK companies from wikipedia
 
 
 ```{r}
 library(tidyverse)
 library(rvest)
+library(magrittr)
+
 
 
 "https://en.wikipedia.org/wiki/List_of_companies_of_the_United_Kingdom_A-J" %>% read_html() %>% html_nodes(".mw-content-ltr") %>% html_children() -> vv
@@ -27,6 +28,9 @@ data.frame(title = vv[[1]] %>% rvest::html_elements("ul") %>% lapply(  function(
            text=vv[[1]] %>% rvest::html_elements("ul") %>% lapply(  function(x) { x %>%  html_elements("li")  %>% lapply(  function(y) { y %>% html_elements("a")  %>% lapply(   function(z) {   z %>% html_text()   }  ) %>% .[1]    }  )      } ) %>% unlist(),
            text3 = vv[[1]] %>% rvest::html_elements("ul") %>% lapply(  function(x) { x %>%  html_elements("li")  %>% lapply(  function(y) { y %>% html_text2()   }  )      } ) %>% unlist()  %>% unlist()) -> df
 
+
+df %<>% filter( !row_number() %in% c(1:12)  )
+
 ```
 
 Type any R code in the chunk, for example:
@@ -34,3 +38,31 @@ Type any R code in the chunk, for example:
 df %>% knitr::kable()
 ```
 
+
+
+```{r}
+
+"https://en.wikipedia.org/wiki/List_of_companies_of_the_United_Kingdom_K-Z"  %>%
+  read_html() %>%
+  html_nodes(".mw-content-ltr") %>%
+  html_children() -> vv
+
+
+data.frame(
+  title = vv[[1]] %>% rvest::html_elements("ul") %>% lapply(  function(x) { x %>%  html_elements("li")  %>% lapply(  function(y) { y %>% html_elements("a")  %>% lapply(   function(z) {   z %>% html_attr("title")   }  ) %>% .[1]    }  )      } ) %>% unlist(),
+
+  href=vv[[1]] %>% rvest::html_elements("ul") %>% lapply(  function(x) { x %>%  html_elements("li")  %>% lapply(  function(y) { y %>% html_elements("a")  %>% lapply(   function(z) {   z %>% html_attr("href")   }  ) %>% .[1]    }  )      } ) %>% unlist(),
+
+  text2=vv[[1]] %>% rvest::html_elements("ul") %>% lapply(  function(x) { x %>%  html_elements("li")  %>% lapply(  function(y) { y %>% html_elements("a")  %>% lapply(   function(z) {   z %>% html_text2()   }  ) %>% .[1]    }  )      } ) %>% unlist(),
+
+  text=vv[[1]] %>% rvest::html_elements("ul") %>% lapply(  function(x) { x %>%  html_elements("li")  %>% lapply(  function(y) { y %>% html_elements("a")  %>% lapply(   function(z) {   z %>% html_text()   }  ) %>% .[1]    }  )      } ) %>% unlist(),
+
+  text3 = vv[[1]] %>% rvest::html_elements("ul") %>% lapply(  function(x) { x %>%  html_elements("li")  %>% lapply(  function(y) { y %>% html_text2()   }  )      } ) %>% unlist()  %>% unlist()) %>% filter( !row_number() %in% c(1:12)  )  -> df2
+
+
+
+df %<>% rbind(df2) %>% filter( !row_number() %in% c(1:12)  )
+
+df %>% saveRDS("companiesWikipedia.rds")
+
+```
